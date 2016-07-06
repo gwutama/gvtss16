@@ -1,0 +1,120 @@
+<!DOCTYPE html5>
+<html>
+	<head>
+        <title>Graphical Visualization Technologies SS16 - Aufgabe A9</title>    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+        
+		<script src="js/gl-matrix.js"></script>
+		<script src="js/GVT_Src_vertexData_plane.js"></script>
+		<script src="js/GVT_Src_vertexData_sphere.js"></script>
+		<script src="js/GVT_Src_vertexData_torus.js"></script>
+		<script src="js/BEL_Src_tpl.js"></script>
+		<script type="x-shader/x-vertex" id="vertexshader">
+			attribute vec3 aPosition;
+			attribute vec3 aNormal;
+			
+			uniform mat4 uPMatrix;
+			uniform mat4 uMVMatrix;
+			uniform mat3 uNMatrix;
+			
+			//uniform vec4 uColor;
+			varying vec4 vColor;
+						
+			// Ambient light.
+			uniform vec3 ambientLight;
+			
+			// Pointlights.
+			const int MAX_LIGHT_SOURCES = 8;
+			struct LightSource {
+				bool isOn;
+				vec3 position;
+				vec3 color;
+			};
+			uniform LightSource light[MAX_LIGHT_SOURCES];
+			
+			// Material.
+			struct PhongMaterial {
+				vec3 ka;
+				vec3 kd;
+				vec3 ks;
+				float ke; 
+			};
+			uniform PhongMaterial material;
+            
+            // Super simple toon illumination for single light source
+            vec3 toon(vec3 p, vec3 n, vec3 v, LightSource l) {
+                vec3 eyePos = vec3(0.0, 0.0, 5.0);
+                vec3 eyeVert = normalize(eyePos - v);
+                vec3 lightVert = normalize(l.position - v);
+                vec3 eyeLight = normalize(lightVert + eyeVert);
+                
+                float silhouette = max(dot(n, eyeVert), 0.0);
+                if (silhouette < 0.3)
+                    return vec3(0.0, 0.0, 0.0);
+                
+                vec3 L = l.color;
+                
+                float spec = pow(max(dot(n, eyeLight), 0.0), 5.0);
+                if (spec < 0.2)
+                    L *= 0.8;
+                    
+                float diffuse = max(dot(n, lightVert), 0.0);
+                if (diffuse < 0.2)
+                    L *= 0.8;
+
+                return L * material.kd;
+            }            
+            
+			// Toon illumination for multiple light sources            
+			vec3 toon(vec3 p, vec3 n, vec3 v) {	
+				// Calculate ambient light.
+				vec3 result = material.ka * ambientLight;
+				
+				// Add light from all light sources.
+				for(int j=0; j < MAX_LIGHT_SOURCES; j++){
+					if(light[j].isOn){
+						result += toon(p, n, v, light[j]);
+					}
+				}
+				return result;
+			}            
+			
+			void main(){
+				// Calculate vertex position in eye coordinates. 
+				vec4 tPosition = uMVMatrix * vec4(aPosition, 1.0);
+				// Calculate projektion.
+				gl_Position = uPMatrix * tPosition;			
+				vec3 tNormal = normalize(uNMatrix * aNormal);	
+				// Calculate view vector.
+				vec3 v = normalize(-tPosition.xyz);	                
+                vColor = vec4( toon(tPosition.xyz, tNormal, v), 1.0);
+			}
+		</script>
+		<script type="x-shader/x-fragment" id="fragmentshader">
+			precision mediump float;
+			
+			varying vec4 vColor;
+			
+			void main() {
+				gl_FragColor = vColor;
+			}
+		</script>
+	</head>
+	<body onload="app.start()">
+    <div class="container">
+        <!-- Title, info, etc -->
+        <h1><a href="http://gwutama.github.io/gvtss16/">GVT SS16</a> - Toon Shader<br><small>Galuh Utama / TH Brandenburg / 20149501</small></h1>    
+        <div class="jumbotron">        
+            <canvas id="canvas" width="500" height="500"></canvas>
+            <h2>Interactive camera</h2>
+            <ul>
+                <li>C: rotate</li>
+                <li>H: higher</li>
+                <li>R: reset</li>
+                <li>L: orbit spotlights</li>                
+            </ul>
+        </div>            
+	</body>
+</html>
