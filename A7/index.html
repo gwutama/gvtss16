@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Graphical Visualization Technologies SS16 - Aufgabe A7</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+    <script src="js/gl-matrix.js"></script>
+    <script src="js/GVT_Src_vertexData_sphere.js"></script>
+    <script src="js/GVT_Src_vertexData_torus.js"></script>
+    <script src="js/GVT_Src_vertexData_plane.js"></script>
+    <script src="js/cube.js"></script>
+    <script src="js/pyramid.js"></script>
+    <script src="js/SHA_Src_tpl.js"></script>
+    <script type="x-shader/x-vertex" id="vertexshader">
+			attribute vec3 aPosition;
+			attribute vec3 aNormal;
+
+			uniform mat4 uPMatrix;
+			uniform mat4 uMVMatrix;
+
+			varying vec4 vColor;
+			varying float displacement;
+
+			void main(){
+                gl_Position = uPMatrix * uMVMatrix * vec4(aPosition, 1.0);
+                float t = -aNormal.z + 0.5;
+                vColor = vec4(t, t, t, 1.0);
+			}
+    </script>
+    <script type="x-shader/x-fragment" id="fragmentshader">
+			precision mediump float;
+			varying vec4 vColor;
+
+			void main() {
+    			gl_FragColor = vColor;
+			}
+    </script>
+</head>
+<body onload="app.start()">
+    <div class="container">
+        <!-- Title, info, etc -->
+        <h1><a href="http://gwutama.github.io/gvtss16/">GVT SS16</a> - Z-Buffer Visualization<br><small>Galuh Utama / TH Brandenburg / 20149501</small></h1>
+
+        <div class="jumbotron">
+            <canvas id="canvas" width="1000" height="600" style="border: 1px solid #888"></canvas>
+            <h2>Interactive camera</h2>
+            <ul>
+                <li>C: rotate</li>
+                <li>H: higher</li>
+                <li>G: lower</li>
+                <li>D: further</li>
+                <li>S: closer</li>
+                <li>R: reset</li>
+            </ul>
+        </div>
+    </div>
+
+</body>
+</html>

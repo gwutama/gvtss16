@@ -6,42 +6,42 @@
  */
 var ParametricArea = function(element) {
     this.element = element;
+    this.vertices =  null;
+    this.indices =  null;
+    this.colors =  null;
+
     this.gl = this.element.getContext("experimental-webgl");
     this.init();
     this.generateVertices();
-    this.generateIndices();
     this.draw();
     this.render();
 };
 
 
 ParametricArea.prototype.generateVertices = function() {
+    var n = 32;
 
+    this.vertices =  new Float32Array(3 * (n + 1));
+    this.indices =  new Uint16Array(n + 1);
+
+    for(var i = 0; i <= n; i++) {
+        var u = i * Math.PI/n;
+        var v = (i * Math.PI)/(n/2) - Math.PI;
+        var a = 5;
+
+        var x = Math.cos(u);
+        var y = Math.cos(v);
+        var z = Math.sin(a * Math.sin(u) * Math.sin(v));
+
+        // Set vertex positions.
+        this.vertices[i * 3] = x;
+        this.vertices[i * 3 + 1] = y;
+        this.vertices[i * 3 + 2] = z;
+
+        // Set index.
+        this.indices[i] = i;
+    }
 };
-
-
-/**
- * Vertices to be drawn.
- * @type {Float32Array}
- */
-ParametricArea.vertices = new Float32Array([
-]);
-
-
-/**
- * Indices that build triangles from vertices.
- * @type {Uint16Array}
- */
-ParametricArea.indices = new Uint16Array([
-]);
-
-
-/**
- * Color of each vertex.
- * @type {Float32Array}
- */
-ParametricArea.colors = new Float32Array([
-]);
 
 
 /**
@@ -90,7 +90,7 @@ ParametricArea.prototype.draw = function() {
     // Setup VBO for pos
     var vbo = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vbo);
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, ParametricArea.vertices, this.gl.STATIC_DRAW);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertices, this.gl.STATIC_DRAW);
     var posAttrib = this.gl.getAttribLocation(this.prog, "pos");
     this.gl.vertexAttribPointer(posAttrib, 3, this.gl.FLOAT, false, 0, 0);
     this.gl.enableVertexAttribArray(posAttrib);
@@ -106,7 +106,7 @@ ParametricArea.prototype.draw = function() {
     // Setup IBO
     this.ibo = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.ibo);
-    this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, ParametricArea.indices, this.gl.STATIC_DRAW);
+    this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, this.indices, this.gl.STATIC_DRAW);
 };
 
 
@@ -115,7 +115,7 @@ ParametricArea.prototype.draw = function() {
  */
 ParametricArea.prototype.render = function() {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-    this.gl.drawElements(this.gl.LINES, ParametricArea.indices.length, this.gl.UNSIGNED_SHORT, 0);
+    this.gl.drawElements(this.gl.LINE_STRIP, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
 };
 
 
