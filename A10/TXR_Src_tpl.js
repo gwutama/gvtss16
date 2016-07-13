@@ -196,9 +196,9 @@ var app = (function() {
 
         // Set texture parameter.
         // Min Filter: NEAREST,LINEAR, .. , LINEAR_MIPMAP_LINEAR,
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
         // Mag Filter: NEAREST,LINEAR
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         // Use mip-Mapping.
         gl.generateMipmap(gl.TEXTURE_2D);
 
@@ -251,9 +251,15 @@ var app = (function() {
             ks : [ 0, 0, 0 ]
         });
 
-        createModel("plane", fs, [ 1, 1, 1, 1 ], [ 0, 0, 0, 0 ], [ 0, 0, 0,
-                0 ], [ 1, 1, 1, 1 ], mGrey, "textures/x.png");
+        createModel("torus", fs, [ 1, 1, 1, 1 ], [ 0, 0, 0 ],
+                [ -1.2, 0, 0, 0 ], [ 1, 1, 1, 1 ], mGrey, "textures/y.png");
 
+        createModel("torus", fs, [ 1, 1, 1, 1 ], [ 1.6, 0, 0 ],
+                [ -1.2, 0, 0, 0 ], [ 0.8, 0.8, 0.8, 0.8 ], mGrey, "textures/y.png");
+
+        createModel("torus", fs, [ 1, 1, 1, 1 ], [ -1.6, 0, 0 ],
+                [ -1.2, 0, 0, 0 ], [ 0.8, 0.8, 0.8, 0.8 ], mGrey, "textures/y.png");                
+                
         // Select one model that can be manipulated interactively by user.
         interactiveModel = models[0];
     }

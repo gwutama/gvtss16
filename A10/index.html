@@ -1,0 +1,65 @@
+<!DOCTYPE html5>
+<html>
+	<head>
+        <title>Graphical Visualization Technologies SS16 - Aufgabe A10</title>    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+    
+		<script src="ext/gl-matrix.js"></script>
+		<script src="GVT_Src_vertexData_torus.js"></script>        
+        <script src="TXR_Src_tpl.js"></script>
+		<script type="x-shader/x-vertex" id="vertexshader">
+			attribute vec3 aPosition;
+			attribute vec3 aNormal;
+			attribute vec2 aTextureCoord;
+			
+			uniform mat4 uPMatrix;
+			uniform mat4 uMVMatrix;
+			uniform mat3 uNMatrix;
+			
+			varying vec2 vTextureCoord;
+			
+			void main(){
+				// Calculte vertex position in eye coordinates. 
+				vec4 tPosition = uMVMatrix * vec4(aPosition, 1.0);
+				// Calculate projektion.
+				gl_Position = uPMatrix * tPosition;
+			
+				vec3 tNormal = normalize(uNMatrix * aNormal);
+				
+				vTextureCoord = aTextureCoord;		
+			}
+		</script>
+		<script type="x-shader/x-fragment" id="fragmentshader">
+			precision mediump float;
+			
+			uniform sampler2D uTexture;
+			
+			varying vec2 vTextureCoord;
+			
+			void main() {
+				gl_FragColor = texture2D(uTexture, vTextureCoord);
+			}			
+		</script>
+	</head>
+	<body onload="app.start()">
+    <div class="container">
+        <!-- Title, info, etc -->
+        <h1><a href="http://gwutama.github.io/gvtss16/">GVT SS16</a> - Torus Texture<br><small>Galuh Utama / TH Brandenburg / 20149501</small></h1>
+        <div class="jumbotron">        
+            <h2>Chocolate Donuts</h2>        
+            <canvas id="canvas" width="500" height="500"></canvas>
+            <h3>Texture</h3>
+            <img src="textures/y.png"/>
+            <h3>Interactions</h3>            
+            <ul>
+                <li>C: orbit camera</li>
+                <li>H: higher</li>
+                <li>V: further</li>                
+                <li>X: rotate x-axis</li>
+                <li>Y: rotate y-axis</li>                
+            </ul>
+        </div>                
+	</body>
+</html>
