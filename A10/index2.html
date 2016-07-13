@@ -1,0 +1,149 @@
+<!DOCTYPE html5>
+<html>
+	<head>
+        <title>Graphical Visualization Technologies SS16 - Aufgabe A10</title>    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+    
+		<script src="ext/gl-matrix.js"></script>
+		<script src="GVT_Src_vertexData_torus.js"></script>        
+		<script src="TXR_Src_Procedural_tpl.js"></script>
+		<script type="x-shader/x-vertex" id="vertexshader">
+			attribute vec3 aPosition;
+			attribute vec3 aNormal;
+			attribute vec2 aTextureCoord;
+
+			uniform mat4 uPMatrix;
+			uniform mat4 uMVMatrix;
+			uniform mat3 uNMatrix;
+			
+			varying vec3 vNormal;
+			varying vec4 vPosition;
+			
+			varying vec2 vTextureCoord;
+
+			void main(){
+				// Calculte vertex position in eye coordinates. 
+				vec4 tPosition = uMVMatrix * vec4(aPosition, 1.0);
+				// Calculate projektion.
+				gl_Position = uPMatrix * tPosition;
+	
+				vec3 tNormal = normalize(uNMatrix * aNormal);
+				tNormal = uNMatrix * aNormal;
+				
+				vPosition = tPosition;
+				vNormal = tNormal;				
+				vTextureCoord = aTextureCoord;		
+			}
+		</script>
+		<script type="x-shader/x-fragment" id="fragmentshader">
+			precision mediump float;
+			
+			uniform sampler2D uTexture;
+			
+			varying vec2 vTextureCoord;
+			varying vec3 vNormal;
+			varying vec4 vPosition;
+			
+			// Material.
+			struct PhongMaterial {
+				vec3 ka;
+				vec3 kd;
+				vec3 ks;
+				float ke; 
+			};
+			uniform PhongMaterial material;
+			
+			// Ambient light.
+			uniform vec3 ambientLight;
+			
+			// Pointlights.
+			const int MAX_LIGHT_SOURCES = 8;
+			struct LightSource {
+				bool isOn;
+				vec3 position;
+				vec3 color;
+			};
+			uniform LightSource light[MAX_LIGHT_SOURCES];
+			
+			// Phong illumination for single light source,
+			// no ambient light.
+			vec3 phong(vec3 p, vec3 n, vec3 v, LightSource l) {
+			
+				vec3 L = l.color;
+			
+				vec3 s = normalize(l.position - p);
+				vec3 r = reflect(-s, n);
+				
+				float sn = max( dot(s,n), 0.0);
+				float rv = max( dot(r,v), 0.0);
+							
+				vec3 diffuse = material.kd * L * sn;								
+				vec3 specular = material.ks * L * pow(rv, material.ke);
+			
+				return diffuse + specular;			
+			}
+			
+			// Phong illumination for multiple light sources
+			vec3 phong(vec3 p, vec3 n, vec3 v) {
+			
+				// Calculate ambient light.
+				vec3 result = material.ka * ambientLight;
+				
+				// Add light from all light sources.
+				for(int j=0; j < MAX_LIGHT_SOURCES; j++){
+					if(light[j].isOn){
+						result += phong(p, n, v, light[j]);
+					}
+				}
+				return result;
+			}
+			
+			void main() {
+                // Calculate view vector.
+                // For ortho projection:
+                vec3 v = vec3(0,0,-1);
+
+                vec3 vNormal = normalize(vNormal);
+
+                float strips = mod(floor(vTextureCoord.s * 36.), 7.);
+                vec4 tColor;
+                
+                if (strips == 0.0) {
+                    tColor = vec4(0.580, 0, 0.827, 1); // violet
+                }
+                else if (strips == 1.0) {
+                    tColor = vec4(0.294, 0, 0.510, 1); // indigo            
+                }                
+                else if (strips == 2.0) {
+                    tColor = vec4(0, 0, 1, 1); // blue
+                }                                
+                else if (strips == 3.0) {
+                    tColor = vec4(0, 1, 0, 1); // green
+                }                                                
+                else if (strips == 4.0) {
+                    tColor = vec4(1, 1, 0, 1); // yellow
+                }                                                                
+                else if (strips == 5.0) {
+                    tColor = vec4(1, 0.5, 0, 1); // orange
+                }                                                
+                else if (strips == 6.0) {
+                    tColor = vec4(1, 0, 0, 1); // red
+                }                                                                
+                vec4 lighting = vec4( phong(vPosition.xyz, vNormal, v), 1.0);
+                gl_FragColor = tColor * lighting;
+			}			
+		</script>
+	</head>
+	<body onload="app.start()">
+    <div class="container">
+        <!-- Title, info, etc -->
+        <h1><a href="http://gwutama.github.io/gvtss16/">GVT SS16</a> - Torus Texture (Procedural)<br><small>Galuh Utama / TH Brandenburg / 20149501</small></h1>
+        <div class="alert alert-info" role="alert">Rainbow Donut (Procedural Texture)</div>                
+        <div class="jumbotron">        
+            <canvas id="canvas" width="500" height="500"></canvas>
+        </div>          
+    </div>
+	</body>
+</html>
